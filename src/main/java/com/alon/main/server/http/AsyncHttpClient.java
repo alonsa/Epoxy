@@ -2,6 +2,7 @@ package com.alon.main.server.http;
 
 import com.alon.main.server.Parser;
 import com.alon.main.server.enums.ErrorType;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
@@ -16,6 +17,7 @@ import org.apache.http.nio.reactor.ConnectingIOReactor;
 import org.apache.http.protocol.HttpContext;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Set;
@@ -110,7 +112,10 @@ public class AsyncHttpClient {
                     HttpEntity httpEntity = httpResponse.getEntity();
                     InputStream inputStream = httpEntity.getContent();
                     ContentType contentType = ContentType.get(httpEntity);
-                    obj = parser.parse(inputStream, contentType);
+                    String str = parseString(inputStream);
+                    if (str != null){
+                        obj = parser.parse(str, contentType);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -120,6 +125,16 @@ public class AsyncHttpClient {
         }
 
         return new Pair<>(url, obj);
+    }
+
+    private String parseString(InputStream inputStream) {
+        String str = null;
+        try {
+            str = IOUtils.toString(inputStream).trim();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return str;
     }
 
     private static class GetAsyncCall implements Callable<Pair<String, Future<HttpResponse>>> {

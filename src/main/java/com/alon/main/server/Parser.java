@@ -1,12 +1,8 @@
 package com.alon.main.server;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.entity.ContentType;
 import org.json.JSONObject;
 import org.json.XML;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_XML;
@@ -17,36 +13,23 @@ import static javax.ws.rs.core.MediaType.TEXT_XML;
  */
 public class Parser {
 
-    public JSONObject parse(InputStream inputStream, ContentType contentType){
+    public JSONObject parse(String str, ContentType contentType){
         switch (contentType.getMimeType()){
-            case APPLICATION_JSON: return parseJson(inputStream);
-            case TEXT_XML: return parseXml(inputStream);
-            default: return parseJson(inputStream);
+            case APPLICATION_JSON: return parseJson(str);
+            case TEXT_XML: return parseXml(str);
+            default: return parseJson(str);
         }
     }
 
-    private String parseString(InputStream inputStream) {
-        String str = null;
-        try {
-            str = IOUtils.toString(inputStream).trim();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return str;
+    private JSONObject parseJson(String str) {
+        return new JSONObject(str);
     }
 
-    private JSONObject parseJson(InputStream inputStream) {
-        String jsonString = parseString(inputStream);
-        JSONObject json = new JSONObject(jsonString);
-        return json;
-    }
-
-    private JSONObject parseXml(InputStream inputStream) {
+    private JSONObject parseXml(String str) {
         JSONObject xmlJSONObj = null;
         try
         {
-            String xmlString = parseString(inputStream);
-            xmlJSONObj = XML.toJSONObject(xmlString);
+            xmlJSONObj = XML.toJSONObject(str);
         } catch (Exception e) {
             e.printStackTrace();
         }
