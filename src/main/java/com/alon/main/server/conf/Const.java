@@ -3,7 +3,7 @@ package com.alon.main.server.conf;
 /**
  * Created by alon_ss on 6/14/16.
  */
-public class Conf {
+public class Const {
     public static final String UTF_8 = "UTF-8";
     public static final String CONTENT_TYPE = "Content-Type";
 

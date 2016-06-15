@@ -11,8 +11,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
-import static com.alon.main.server.conf.Conf.AGGREGATION_APPENDED;
-import static com.alon.main.server.conf.Conf.AGGREGATION_COMBINED;
+import static com.alon.main.server.conf.Const.AGGREGATION_APPENDED;
+import static com.alon.main.server.conf.Const.AGGREGATION_COMBINED;
 
 @Path("/epoxy.com/fetch/{arrayJson}")
 public class RestImpl {

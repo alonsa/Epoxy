@@ -1,7 +1,7 @@
 package com.alon.main.server.enums;
 
-import static com.alon.main.server.conf.Conf.ERROR_FAIL_ANY;
-import static com.alon.main.server.conf.Conf.ERROR_REPLACE;
+import static com.alon.main.server.conf.Const.ERROR_FAIL_ANY;
+import static com.alon.main.server.conf.Const.ERROR_REPLACE;
 
 /**
  * Created by alon_ss on 6/14/16.

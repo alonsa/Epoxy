@@ -26,10 +26,10 @@ import java.util.stream.Collectors;
  * Created by alon_ss on 6/13/16.
  */
 
-public class HttpAsyncHttpClient {
+public class AsyncHttpClient {
     private Parser parser;
 
-    public HttpAsyncHttpClient(){
+    public AsyncHttpClient(){
        parser = new Parser();
     }
 
@@ -57,7 +57,7 @@ public class HttpAsyncHttpClient {
             responses = urls.parallelStream().
                     map(url -> getGetAsyncThread(client, url)). // create callables
                     filter(x -> x != null). // in case of bad urls
-                    map(GetAsyncThread::call). // execute requests. Return with Url Request as String and a  Future of HttpResponse
+                    map(GetAsyncCall::call). // execute requests. Return with Url Request as String and a  Future of HttpResponse
                     filter(x -> x != null). // in case of bad http response
                     map(x -> toHttpResponseEntity(x.getKey(), x.getValue())).
                     filter(x -> x.getValue() != null). // in case of bad http response
@@ -73,50 +73,45 @@ public class HttpAsyncHttpClient {
         return responses;
     }
 
-    private GetAsyncThread getGetAsyncThread(CloseableHttpAsyncClient client, String url) {
+    private GetAsyncCall getGetAsyncThread(CloseableHttpAsyncClient client, String url) {
         try {
             HttpGet request = new HttpGet(url);
-            return new GetAsyncThread(client, request);
+            return new GetAsyncCall(client, request);
         } catch (Exception e) {
             return null;
         }
     }
 
     private Pair<String, Object> toHttpResponseEntity(String url, Future<HttpResponse> httpFutureResponse) {
-        Pair<String, Object> response = null;
-
-        if (httpFutureResponse != null){
-            try {
-                response = toHttpResponseEntity(url, httpFutureResponse.get());
-            } catch (Exception ignored) {
-
-            }
-        }
-        return response;
-    }
-
-    private Pair<String, Object> toHttpResponseEntity(String url, HttpResponse httpResponse){
         Object obj = null;
-        if (httpResponse.getStatusLine().getStatusCode() < 300){
-            try {
-                HttpEntity httpEntity = httpResponse.getEntity();
-                InputStream inputStream = httpEntity.getContent();
-                ContentType contentType = ContentType.get(httpEntity);
-                obj = parser.parse(inputStream, contentType);
-            } catch (Exception e) {
-                e.printStackTrace();
+
+        try {
+            HttpResponse httpResponse = httpFutureResponse.get();
+
+            if (httpResponse.getStatusLine().getStatusCode() < 300){
+                try {
+                    HttpEntity httpEntity = httpResponse.getEntity();
+                    InputStream inputStream = httpEntity.getContent();
+                    ContentType contentType = ContentType.get(httpEntity);
+                    obj = parser.parse(inputStream, contentType);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
+        }  catch (Exception e) {
+            e.printStackTrace();
         }
+
         return new Pair<>(url, obj);
+
     }
 
-
-    private static class GetAsyncThread implements Callable<Pair<String, Future<HttpResponse>>> {
+    private static class GetAsyncCall implements Callable<Pair<String, Future<HttpResponse>>> {
         private CloseableHttpAsyncClient client;
         private HttpContext context;
         private HttpGet request;
 
-        GetAsyncThread(CloseableHttpAsyncClient client, HttpGet req){
+        GetAsyncCall(CloseableHttpAsyncClient client, HttpGet req){
             this.client = client;
             context = HttpClientContext.create();
             this.request = req;
@@ -149,11 +144,11 @@ public class HttpAsyncHttpClient {
         }
 
         K getKey() {
-            return key;
+            return this.key;
         }
 
         V getValue() {
-            return value;
+            return this.value;
         }
     }
 

@@ -2,7 +2,7 @@ package com.alon.main.server;
 
 import com.alon.main.server.enums.AggregationType;
 import com.alon.main.server.enums.ErrorType;
-import com.alon.main.server.http.HttpAsyncHttpClient;
+import com.alon.main.server.http.AsyncHttpClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -10,7 +10,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.alon.main.server.conf.Conf.UTF_8;
+import static com.alon.main.server.conf.Const.UTF_8;
 
 
 /**
@@ -18,12 +18,12 @@ import static com.alon.main.server.conf.Conf.UTF_8;
  */
 public class MessageService {
 
-    HttpAsyncHttpClient httpClient;
+    AsyncHttpClient httpClient;
     private Parser parser;
 
 
     public MessageService(){
-        httpClient = new HttpAsyncHttpClient();
+        httpClient = new AsyncHttpClient();
         parser = new Parser();
     }
 

@@ -1,7 +1,7 @@
 package com.alon.main.server.enums;
 
-import static com.alon.main.server.conf.Conf.CONTENT_TYPE_APPLICATION_JSON;
-import static com.alon.main.server.conf.Conf.CONTENT_TYPE_TEXT_XML;
+import static com.alon.main.server.conf.Const.CONTENT_TYPE_APPLICATION_JSON;
+import static com.alon.main.server.conf.Const.CONTENT_TYPE_TEXT_XML;
 
 /**
  * Created by alon_ss on 6/14/16.

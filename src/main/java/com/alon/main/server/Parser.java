@@ -1,18 +1,15 @@
 package com.alon.main.server;
 
-import com.alon.main.server.entity.HttpResponseEntity;
-import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.entity.ContentType;
 import org.json.JSONObject;
 import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_XML;
@@ -48,13 +45,14 @@ public class Parser {
     private Document parseXml(InputStream inputStream) {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         Document document = null;
+
         try
         {
             String xmlString = parseString(inputStream);
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            document = builder.parse( new InputSource( new StringReader( xmlString ) ) );
+            InputStream stream = new ByteArrayInputStream(xmlString.getBytes("UTF-8"));
 
-//            document = builder.parse(xmlString);
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            document = builder.parse(stream);
         } catch (Exception e) {
             e.printStackTrace();
         }
