@@ -1,6 +1,7 @@
 package com.alon.main.server.http;
 
 import com.alon.main.server.Parser;
+import com.alon.main.server.enums.ErrorType;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
@@ -13,6 +14,7 @@ import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
 import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
 import org.apache.http.nio.reactor.ConnectingIOReactor;
 import org.apache.http.protocol.HttpContext;
+import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.util.Map;
@@ -28,12 +30,14 @@ import java.util.stream.Collectors;
 
 public class AsyncHttpClient {
     private Parser parser;
+    private ErrorType errorType;
 
-    public AsyncHttpClient(){
-       parser = new Parser();
+    public AsyncHttpClient(ErrorType errorType){
+        this.parser = new Parser();
+        this.errorType = errorType;
     }
 
-    public Map<String, Object> doPar(Set<String> urls, Integer timeout) throws Exception{
+    public Map<String, JSONObject> doPar(Set<String> urls, Integer timeout) throws Exception{
 
         // Create Http Client
         ConnectingIOReactor ioReactor = new DefaultConnectingIOReactor();
@@ -51,16 +55,15 @@ public class AsyncHttpClient {
         client.start();
 
         // Async
-        Map<String, Object> responses = null;
+        Map<String, JSONObject> responses = null;
         try {
-
             responses = urls.parallelStream().
                     map(url -> getGetAsyncThread(client, url)). // create callables
-                    filter(x -> x != null). // in case of bad urls
+                    filter(x -> failMechanism(x, "One of the Urls was a bad url")). // in case of bad urls
                     map(GetAsyncCall::call). // execute requests. Return with Url Request as String and a  Future of HttpResponse
-                    filter(x -> x != null). // in case of bad http response
+                    filter(x -> failMechanism(x.getValue(), "Failed to call to: " + x.getKey())). // in case of bad http response
                     map(x -> toHttpResponseEntity(x.getKey(), x.getValue())).
-                    filter(x -> x.getValue() != null). // in case of bad http response
+                    filter(x -> failMechanism(x.getValue(), "Bad response for: " + x.getKey())). // in case of bad http response
                     collect(Collectors.toMap(Pair::getKey, Pair::getValue));
         }finally {
             try{
@@ -73,6 +76,20 @@ public class AsyncHttpClient {
         return responses;
     }
 
+    private boolean failMechanism(Object x, String errMessage) {
+        boolean response = true;
+        switch (errorType){
+            case REPLACE:
+                response =  x != null;
+                break;
+            case FAIL_ANY:
+                if (x == null){
+                    throw new RuntimeException(errMessage);
+                }
+        }
+        return response;
+    }
+
     private GetAsyncCall getGetAsyncThread(CloseableHttpAsyncClient client, String url) {
         try {
             HttpGet request = new HttpGet(url);
@@ -82,8 +99,8 @@ public class AsyncHttpClient {
         }
     }
 
-    private Pair<String, Object> toHttpResponseEntity(String url, Future<HttpResponse> httpFutureResponse) {
-        Object obj = null;
+    private Pair<String, JSONObject> toHttpResponseEntity(String url, Future<HttpResponse> httpFutureResponse) {
+        JSONObject obj = null;
 
         try {
             HttpResponse httpResponse = httpFutureResponse.get();
@@ -103,7 +120,6 @@ public class AsyncHttpClient {
         }
 
         return new Pair<>(url, obj);
-
     }
 
     private static class GetAsyncCall implements Callable<Pair<String, Future<HttpResponse>>> {
@@ -119,18 +135,16 @@ public class AsyncHttpClient {
 
         @Override
         public Pair<String, Future<HttpResponse>> call() {
-            Pair<String, Future<HttpResponse>> response;
 
+            Future<HttpResponse> futureResponse = null;
+            String uri = request.getURI().toString();
             try{
-                Future<HttpResponse> futureResponse = client.execute(request, context, null);
-                String uri = request.getURI().toString();
-                response = new Pair<>(uri, futureResponse);
+                futureResponse = client.execute(request, context, null);
             }catch (Exception e) {
                 System.err.println("Failed to call to: " + request);
-                response = null;
             }
 
-            return response;
+            return new Pair<>(uri, futureResponse);
         }
     }
 

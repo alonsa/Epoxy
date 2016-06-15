@@ -1,53 +1,57 @@
 package com.alon.main.server.rest;
 
+import com.alon.main.server.MessageService;
 import com.alon.main.server.enums.AggregationType;
 import com.alon.main.server.enums.ErrorType;
-import com.alon.main.server.MessageService;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-import java.util.List;
+import java.util.Base64;
 
-import static com.alon.main.server.conf.Const.AGGREGATION_APPENDED;
-import static com.alon.main.server.conf.Const.AGGREGATION_COMBINED;
+import static com.alon.main.server.conf.Const.*;
 
 @Path("/epoxy.com/fetch/{arrayJson}")
 public class RestImpl {
 
-	//	http://localhost:8090/epoxy.com/fetch/W3siZmlyc3QiOiAiaHR0cHM6Ly9zYWZlLWlubGV0LTgxMDUuaGVyb2t1YXBwLmNvbS9wYXltZW50cyINCn0seyJzZWNvbmQiOiAiaHR0cHM6Ly9zYWZlLWlubGV0LTgxMDUuaGVyb2t1YXBwLmNvbS9wbGFucyINCn0seyJ0aGlyZCI6ICJodHRwczovL3NhZmUtaW5sZXQtODEwNS5oZXJva3VhcHAuY29tL3BheW91dCINCn0seyJmb3VydGgiOiAiQUxPTiINCn0seyJmaWZ0aCI6ICJodHRwczovL3NhZmUtaW5sZXQtODEwNS5oZXJva3VhcHAuY29tL2ZlZWQifV0=/appended
+	//	http://localhost:8090/epoxy.com/fetch/WyJodHRwczovL3NhZmUtaW5sZXQtODEwNS5oZXJva3VhcHAuY29tL3BheW1lbnRzIiwgImh0dHBzOi8vc2FmZS1pbmxldC04MTA1Lmhlcm9rdWFwcC5jb20vcGxhbnMiLCAiaHR0cHM6Ly9zYWZlLWlubGV0LTgxMDUuaGVyb2t1YXBwLmNvbS9mZWVkIiwgImh0dHBzOi8vc2FmZS1pbmxldC04MTA1Lmhlcm9rdWFwcC5jb20vcGF5b3V0Il0=/appended
 
-	@QueryParam("errors") protected List<ErrorType> errors;
-	@QueryParam("timeout") protected Integer timeout;
 	@PathParam("arrayJson") protected String jsonBase64;
+	@DefaultValue(ERROR_REPLACE) @QueryParam("errors") protected ErrorType error;
+
+	// I add a query param, In order to return with a base64 response, just add zip=true
+	@DefaultValue("false") @QueryParam("zip") protected Boolean zip;
+	@QueryParam("timeout") protected Integer timeout;
 
 	@GET
 	@Path("/" + AGGREGATION_COMBINED)
 	public Response getCombinedMsg() {
-
-		String response = new MessageService().handleMessage(jsonBase64, timeout, getError(), AggregationType.APPENDED);
-
-		return Response.status(200).entity(response).build();
+		return getResponse(AggregationType.COMBINED);
 	}
 
 	@GET
 	@Path("/" + AGGREGATION_APPENDED)
 	public Response getAppendedMsg() {
-
-		String response = new MessageService().handleMessage(jsonBase64, timeout, getError(), AggregationType.APPENDED);
-
-		return Response.status(200).entity(response).build();
+		return getResponse(AggregationType.APPENDED);
 	}
 
-	private ErrorType getError(){
-		if (errors != null && !errors.isEmpty()){
-			return errors.get(0);
+	private String zip(String str){
+		String result;
+		if (zip){
+			result = Base64.getEncoder().encodeToString(str.getBytes());
 		}else {
-			return ErrorType.REPLACE;
+			result = str;
 		}
 
+		return result;
 	}
 
+	private Response getResponse(AggregationType aggregationType) {
+		try {
+			String response = new MessageService(error).handleMessage(jsonBase64, timeout, aggregationType);
+			return Response.status(200).entity(zip(response)).build();
+		}catch (Exception e){
+			e.printStackTrace();
+			return Response.status(500).entity(e.getMessage()).build();
+		}
+	}
 }

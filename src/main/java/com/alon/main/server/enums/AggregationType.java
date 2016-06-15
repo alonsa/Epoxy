@@ -1,6 +1,7 @@
 package com.alon.main.server.enums;
 
-import static com.alon.main.server.conf.Const.*;
+import static com.alon.main.server.conf.Const.AGGREGATION_APPENDED;
+import static com.alon.main.server.conf.Const.AGGREGATION_COMBINED;
 
 /**
  * Created by alon_ss on 6/14/16.

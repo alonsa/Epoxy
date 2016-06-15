@@ -14,4 +14,17 @@ public enum ErrorType {
     ErrorType(String errorStr) {
         this.val = errorStr;
     }
+
+    public static ErrorType fromString(String text) {
+        if (text != null) {
+            for (ErrorType b : ErrorType.values()) {
+                if (text.equalsIgnoreCase(b.val)) {
+                    return b;
+                }
+            }
+        }
+        return null;
+    }
+
+
 }

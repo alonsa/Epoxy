@@ -3,11 +3,8 @@ package com.alon.main.server;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.entity.ContentType;
 import org.json.JSONObject;
-import org.w3c.dom.Document;
+import org.json.XML;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -20,11 +17,11 @@ import static javax.ws.rs.core.MediaType.TEXT_XML;
  */
 public class Parser {
 
-    public Object parse(InputStream inputStream, ContentType contentType){
+    public JSONObject parse(InputStream inputStream, ContentType contentType){
         switch (contentType.getMimeType()){
             case APPLICATION_JSON: return parseJson(inputStream);
             case TEXT_XML: return parseXml(inputStream);
-            default: return parseString(inputStream);
+            default: return parseJson(inputStream);
         }
     }
 
@@ -39,23 +36,20 @@ public class Parser {
     }
 
     private JSONObject parseJson(InputStream inputStream) {
-        return new JSONObject(inputStream);
+        String jsonString = parseString(inputStream);
+        JSONObject json = new JSONObject(jsonString);
+        return json;
     }
 
-    private Document parseXml(InputStream inputStream) {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        Document document = null;
-
+    private JSONObject parseXml(InputStream inputStream) {
+        JSONObject xmlJSONObj = null;
         try
         {
             String xmlString = parseString(inputStream);
-            InputStream stream = new ByteArrayInputStream(xmlString.getBytes("UTF-8"));
-
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            document = builder.parse(stream);
+            xmlJSONObj = XML.toJSONObject(xmlString);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return document;
+        return xmlJSONObj;
     }
 }
