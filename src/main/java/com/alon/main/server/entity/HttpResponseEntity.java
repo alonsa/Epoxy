@@ -8,17 +8,15 @@ import com.alon.main.server.enums.ContentTypeEnum;
  */
 public class HttpResponseEntity {
 
-    private String url;
     private ContentTypeEnum contentType;
     private String body;
 
     public HttpResponseEntity() {
     }
 
-    public HttpResponseEntity(String contentType, String body, String url) {
+    public HttpResponseEntity(String contentType, String body) {
         this.contentType = ContentTypeEnum.fromString(contentType);
         this.body = body;
-        this.url = url;
     }
 
     public ContentTypeEnum getContentType() {
@@ -37,12 +35,5 @@ public class HttpResponseEntity {
         this.body = body;
     }
 
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
 }
 

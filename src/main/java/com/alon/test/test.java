@@ -2,7 +2,7 @@ package com.alon.test;
 
 import com.alon.main.server.enums.AggregationType;
 import com.alon.main.server.enums.ErrorType;
-import com.alon.main.server.service.MessageService;
+import com.alon.main.server.MessageService;
 
 /**
  * Created by alon_ss on 6/13/16.
@@ -10,7 +10,7 @@ import com.alon.main.server.service.MessageService;
 public class test {
     public static void main(String[] args) {
 
-        String jsonBase64 = "W3siZmlyc3QiOiAiaHR0cHM6Ly9zYWZlLWlubGV0LTgxMDUuaGVyb2t1YXBwLmNvbS9wYXltZW50cyINCn0seyJzZWNvbmQiOiAiaHR0cHM6Ly9zYWZlLWlubGV0LTgxMDUuaGVyb2t1YXBwLmNvbS9wbGFucyINCn0seyJ0aGlyZCI6ICJodHRwczovL3NhZmUtaW5sZXQtODEwNS5oZXJva3VhcHAuY29tL3BheW91dCINCn0seyJmb3VydGgiOiAiQUxPTiINCn0seyJmaWZ0aCI6ICJodHRwczovL3NhZmUtaW5sZXQtODEwNS5oZXJva3VhcHAuY29tL2ZlZWQifV0=";
+        String jsonBase64 = "WyJodHRwczovL3NhZmUtaW5sZXQtODEwNS5oZXJva3VhcHAuY29tL3BheW1lbnRzIiwgImh0dHBzOi8vc2FmZS1pbmxldC04MTA1Lmhlcm9rdWFwcC5jb20vcGxhbnMiLCAiaHR0cHM6Ly9zYWZlLWlubGV0LTgxMDUuaGVyb2t1YXBwLmNvbS9mZWVkIiwgImh0dHBzOi8vc2FmZS1pbmxldC04MTA1Lmhlcm9rdWFwcC5jb20vcGF5b3V0Il0=";
 
         testMessageService(jsonBase64, 0, ErrorType.REPLACE, AggregationType.APPENDED);
         testMessageService(jsonBase64, 0, ErrorType.FAIL_ANY, AggregationType.APPENDED);

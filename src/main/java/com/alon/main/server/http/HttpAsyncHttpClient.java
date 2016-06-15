@@ -1,11 +1,12 @@
 package com.alon.main.server.http;
 
-import com.alon.main.server.entity.HttpResponseEntity;
-import org.apache.commons.io.IOUtils;
+import com.alon.main.server.Parser;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.entity.ContentType;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
@@ -18,10 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static com.alon.main.server.conf.Conf.CONTENT_TYPE;
 
 
 /**
@@ -29,8 +27,13 @@ import static com.alon.main.server.conf.Conf.CONTENT_TYPE;
  */
 
 public class HttpAsyncHttpClient {
+    private Parser parser;
 
-    public Map<String, HttpResponseEntity> doPar(Set<String> urls, Integer timeout) throws Exception{
+    public HttpAsyncHttpClient(){
+       parser = new Parser();
+    }
+
+    public Map<String, Object> doPar(Set<String> urls, Integer timeout) throws Exception{
 
         // Create Http Client
         ConnectingIOReactor ioReactor = new DefaultConnectingIOReactor();
@@ -48,16 +51,17 @@ public class HttpAsyncHttpClient {
         client.start();
 
         // Async
-        Map<String, HttpResponseEntity> responses = null;
+        Map<String, Object> responses = null;
         try {
+
             responses = urls.parallelStream().
                     map(url -> getGetAsyncThread(client, url)). // create callables
                     filter(x -> x != null). // in case of bad urls
                     map(GetAsyncThread::call). // execute requests. Return with Url Request as String and a  Future of HttpResponse
                     filter(x -> x != null). // in case of bad http response
-                    map(x -> toHttpResponseEntity(x.getUri(), x.getFutureResponse())).
-                    filter(x -> x.getBody() != null). // in case of bad http response
-                    collect(Collectors.toMap(HttpResponseEntity::getUrl, Function.identity()));
+                    map(x -> toHttpResponseEntity(x.getKey(), x.getValue())).
+                    filter(x -> x.getValue() != null). // in case of bad http response
+                    collect(Collectors.toMap(Pair::getKey, Pair::getValue));
         }finally {
             try{
                 client.close();
@@ -78,8 +82,8 @@ public class HttpAsyncHttpClient {
         }
     }
 
-    private HttpResponseEntity toHttpResponseEntity(String url, Future<HttpResponse> httpFutureResponse) {
-        HttpResponseEntity response = new HttpResponseEntity();
+    private Pair<String, Object> toHttpResponseEntity(String url, Future<HttpResponse> httpFutureResponse) {
+        Pair<String, Object> response = null;
 
         if (httpFutureResponse != null){
             try {
@@ -91,22 +95,23 @@ public class HttpAsyncHttpClient {
         return response;
     }
 
-    private HttpResponseEntity toHttpResponseEntity(String url, HttpResponse httpResponse){
-        String body = null;
-        String contentType = null;
+    private Pair<String, Object> toHttpResponseEntity(String url, HttpResponse httpResponse){
+        Object obj = null;
         if (httpResponse.getStatusLine().getStatusCode() < 300){
             try {
-                contentType = httpResponse.getFirstHeader(CONTENT_TYPE).getValue();
-                InputStream inputStream = httpResponse.getEntity().getContent();
-                body =  IOUtils.toString(inputStream).trim();
+                HttpEntity httpEntity = httpResponse.getEntity();
+                InputStream inputStream = httpEntity.getContent();
+                ContentType contentType = ContentType.get(httpEntity);
+                obj = parser.parse(inputStream, contentType);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        return new HttpResponseEntity(contentType, body, url);
+        return new Pair<>(url, obj);
     }
 
-    private static class GetAsyncThread implements Callable<Pair> {
+
+    private static class GetAsyncThread implements Callable<Pair<String, Future<HttpResponse>>> {
         private CloseableHttpAsyncClient client;
         private HttpContext context;
         private HttpGet request;
@@ -118,13 +123,13 @@ public class HttpAsyncHttpClient {
         }
 
         @Override
-        public Pair call() {
-            Pair response;
+        public Pair<String, Future<HttpResponse>> call() {
+            Pair<String, Future<HttpResponse>> response;
 
             try{
                 Future<HttpResponse> futureResponse = client.execute(request, context, null);
                 String uri = request.getURI().toString();
-                response = new Pair(uri, futureResponse);
+                response = new Pair<>(uri, futureResponse);
             }catch (Exception e) {
                 System.err.println("Failed to call to: " + request);
                 response = null;
@@ -134,21 +139,21 @@ public class HttpAsyncHttpClient {
         }
     }
 
-    private static class Pair {
-        String uri;
-        Future<HttpResponse> futureResponse;
+    private static class Pair<K, V> {
+        K key;
+        V value;
 
-        Pair(String uri, Future<HttpResponse> futureResponse) {
-            this.uri = uri;
-            this.futureResponse = futureResponse;
+        Pair(K key, V value) {
+            this.key = key;
+            this.value = value;
         }
 
-        String getUri() {
-            return uri;
+        K getKey() {
+            return key;
         }
 
-        Future<HttpResponse> getFutureResponse() {
-            return futureResponse;
+        V getValue() {
+            return value;
         }
     }
 
