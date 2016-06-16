@@ -1,8 +1,9 @@
-package com.alon.main.server;
+package com.alon.main.server.service;
 
 import com.alon.main.server.enums.AggregationType;
 import com.alon.main.server.enums.ErrorType;
 import com.alon.main.server.http.AsyncHttpClient;
+import com.alon.main.server.service.AggregationService;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -20,6 +21,7 @@ public class MessageService {
 
     private AsyncHttpClient httpClient;
     private ErrorType errorType;
+    private AggregationService aggregationService = new AggregationService();
 
 
     public MessageService(ErrorType errorType){
@@ -42,38 +44,7 @@ public class MessageService {
         Set<JSONObject> jsonObjectSet = urls.stream().map(x -> errorHandling(x, urlToObjectMap)).collect(Collectors.toSet());
 
         // Do the aggregation logic and return as a String
-        return  aggregate(jsonObjectSet, aggregationType);
-    }
-
-    private String aggregate(Set<JSONObject> jsonObjectSet, AggregationType aggregationType) {
-        switch (aggregationType){
-            case APPENDED:
-                return appendLogic(jsonObjectSet);
-            case COMBINED:
-                return combineLogic(jsonObjectSet);
-        }
-
-        return null;
-    }
-
-    private String combineLogic(Set<JSONObject> jsonObjectSet) {
-        JSONObject jsonObjectResponse = new JSONObject();
-
-        for (JSONObject json: jsonObjectSet){
-            for (String key: json.keySet()){
-                jsonObjectResponse.put(key, json.get(key));
-            }
-        }
-
-        return jsonObjectResponse.toString();
-    }
-
-    private String appendLogic(Set<JSONObject> jsonObjectSet) {
-        JSONArray json = new JSONArray();
-        for (JSONObject jsonObject: jsonObjectSet){
-            json.put(jsonObject);
-        }
-        return json.toString();
+        return  aggregationService.aggregate(jsonObjectSet, aggregationType);
     }
 
     private JSONObject errorHandling(String url, Map<String, JSONObject> urlToObjectMap) {
@@ -96,7 +67,6 @@ public class MessageService {
     private JSONObject failJson(String key){
         return new JSONObject().put(key, "fail");
     }
-
 
     private JSONArray decodeToJsonArray(String jsonBase64) {
         byte[] data1 = Base64.getDecoder().decode(jsonBase64);

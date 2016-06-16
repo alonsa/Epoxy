@@ -1,6 +1,6 @@
 package com.alon.main.server.http;
 
-import com.alon.main.server.Parser;
+import com.alon.main.server.service.ParserService;
 import com.alon.main.server.enums.ErrorType;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
@@ -31,11 +31,11 @@ import java.util.stream.Collectors;
  */
 
 public class AsyncHttpClient {
-    private Parser parser;
+    private ParserService parserService;
     private ErrorType errorType;
 
     public AsyncHttpClient(ErrorType errorType){
-        this.parser = new Parser();
+        this.parserService = new ParserService();
         this.errorType = errorType;
     }
 
@@ -114,7 +114,7 @@ public class AsyncHttpClient {
                     ContentType contentType = ContentType.get(httpEntity);
                     String str = parseString(inputStream);
                     if (str != null){
-                        obj = parser.parse(str, contentType);
+                        obj = parserService.parse(str, contentType);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

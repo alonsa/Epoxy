@@ -1,6 +1,6 @@
 package com.alon.main.server.rest;
 
-import com.alon.main.server.MessageService;
+import com.alon.main.server.service.MessageService;
 import com.alon.main.server.enums.AggregationType;
 import com.alon.main.server.enums.ErrorType;
 

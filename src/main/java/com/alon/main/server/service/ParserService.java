@@ -1,4 +1,4 @@
-package com.alon.main.server;
+package com.alon.main.server.service;
 
 import org.apache.http.entity.ContentType;
 import org.json.JSONObject;
@@ -11,7 +11,7 @@ import static javax.ws.rs.core.MediaType.TEXT_XML;
 /**
  * Created by alon_ss on 6/15/16.
  */
-public class Parser {
+public class ParserService {
 
     public JSONObject parse(String str, ContentType contentType){
         switch (contentType.getMimeType()){
