@@ -3,7 +3,7 @@ package com.alon.main.server.service;
 import com.alon.main.server.enums.AggregationType;
 import com.alon.main.server.enums.ErrorType;
 import com.alon.main.server.http.AsyncHttpClient;
-import com.alon.main.server.service.AggregationService;
+import com.alon.main.server.utill.AggregationUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -21,7 +21,6 @@ public class MessageService {
 
     private AsyncHttpClient httpClient;
     private ErrorType errorType;
-    private AggregationService aggregationService = new AggregationService();
 
 
     public MessageService(ErrorType errorType){
@@ -44,7 +43,9 @@ public class MessageService {
         Set<JSONObject> jsonObjectSet = urls.stream().map(x -> errorHandling(x, urlToObjectMap)).collect(Collectors.toSet());
 
         // Do the aggregation logic and return as a String
-        return  aggregationService.aggregate(jsonObjectSet, aggregationType);
+        String aggregated = AggregationUtil.aggregate(jsonObjectSet, aggregationType);
+
+        return  aggregated;
     }
 
     private JSONObject errorHandling(String url, Map<String, JSONObject> urlToObjectMap) {
